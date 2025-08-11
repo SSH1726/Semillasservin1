@@ -1,306 +1,334 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Chiles y Cereales Servín</title>
-<link rel="icon" href="https://a8df956abb.cbaul-cdnwnd.com/f87890b711a8506804ac4dab45807d6c/200000000-0f1d8101b8/700/servin%20logo.jpg?ph=a8df956abb">
-<style>
-:root{
-  /* colores base */
-  --vino:#800000;   /* header */
-  --crema:#fff5e1;  /* chips */
-  --crema2:#e6d5c1;
-  --verde:#25d366;  /* whatsapp */
-  --naranja:#ff9800;/* botón carrito */
-  --texto:#2b2b2b;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,Helvetica,sans-serif;background:#f7f7fb;color:var(--texto);padding-top:70px}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chiles y Cereales Servín</title>
+  <style>
+    /* ====== ESTILOS ====== */
+    :root{
+      --vino:#800000;
+      --vino-2:#a00000;
+      --bg:#f9f1f1;
+      --card:#fff;
+      --texto:#222;
+      --verde:#1a8f2b;
+      --gris:#ddd;
+      --sombra:0 2px 6px rgba(0,0,0,.1);
+    }
+    *{box-sizing:border-box}
+    body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:var(--texto)}
+    .navbar{background:var(--vino);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:10px}
+    .navbar img{height:40px}
+    .navbar h1{margin:0;font-size:18px;flex:1;text-align:center;white-space:nowrap}
+    .menu-icon{font-size:26px;cursor:pointer}
+    .navbar button{background:orange;border:none;border-radius:5px;padding:6px 12px;cursor:pointer}
 
-/* header */
-header{position:fixed;top:0;left:0;width:100%;z-index:1000;background:var(--vino);color:#fff;display:flex;align-items:center;padding:10px 14px;gap:14px}
-header h1{flex:1;text-align:center;font-size:1.5em;white-space:nowrap}
-.menu-toggle{font-size:26px;background:none;border:none;color:#fff;cursor:pointer}
-.logo{height:48px}
-.btn-carrito{background:var(--naranja);color:#fff;border:none;padding:8px 12px;border-radius:5px;font-weight:bold;cursor:pointer;white-space:nowrap}
-.menu{display:none;position:absolute;top:100%;left:0;background:#fff;width:200px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
-.menu a{display:block;padding:10px;font-weight:bold;color:var(--vino);text-decoration:none;border-bottom:1px solid #eee}
-.menu a:hover{background:#f7f7f7}
+    .dropdown-menu{display:none;position:absolute;left:10px;right:10px;top:60px;max-width:260px;background:#fff;border-radius:8px;box-shadow:var(--sombra);overflow:hidden;z-index:10}
+    .dropdown-menu a{display:block;padding:12px 14px;color:#5a3d23;text-decoration:none;border-bottom:1px solid #eee}
+    .dropdown-menu a:hover{background:#fafafa}
 
-/* buscador + categorías */
-.buscador{display:flex;justify-content:center;margin:20px 0}
-#search{width:90%;max-width:420px;padding:10px;border:1px solid #ccc;border-radius:6px}
-.categorias{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-bottom:10px}
-.categorias button{background:var(--crema);border:1px solid #ccc;border-radius:999px;padding:8px 14px;font-weight:bold;cursor:pointer}
-.categorias button.active{background:var(--crema2);border-color:var(--vino)}
+    .search-container,.discount-container{display:flex;flex-direction:column;align-items:center;gap:8px;margin:16px auto}
+    .search-container input,.discount-container input{
+      width:min(400px,90%);padding:10px;border:1px solid var(--vino);border-radius:6px;font-size:16px;
+    }
 
-/* productos */
-.productos{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;padding:0 10px 80px}
-.producto{width:220px;background:#fff;border:1px solid #e7e7e7;border-radius:12px;padding:14px;text-align:center;box-shadow:2px 2px 6px rgba(0,0,0,.06)}
-.producto img{max-width:100%;border-radius:8px;margin-bottom:8px;object-fit:cover}
-.producto h3{font-size:16px;min-height:40px;margin-bottom:6px}
-.precio{color:#178c2e;font-weight:bold;margin:.3em 0}
-select{width:100%;padding:8px;margin:8px 0;border:1px solid #ccc;border-radius:6px}
-.btn-agregar{background:var(--vino);color:#fff;border:none;padding:10px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%}
+    .categories{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:10px}
+    .categories button{padding:8px 12px;border:none;border-radius:18px;background:#e8e8e8;cursor:pointer}
+    .categories button:hover{background:#ddd}
 
-/* carrito lateral */
-#carrito{display:none;position:fixed;top:70px;right:20px;background:#fff;max-width:320px;max-height:65vh;overflow:auto;box-shadow:0 6px 16px rgba(0,0,0,.2);border-radius:10px;padding:18px;z-index:999}
-#carrito h3{margin-bottom:8px}
-.carrito-item{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;border-bottom:1px dashed #eee;padding-bottom:6px}
-.carrito-item button{background:none;border:1px solid #e76c6c;color:#c62828;border-radius:6px;padding:2px 8px;font-weight:bold;cursor:pointer}
-.total{margin-top:8px;font-weight:bold;text-align:right}
+    .products{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;padding:20px}
+    @media (max-width:1200px){.products{grid-template-columns:repeat(4,1fr)}}
+    @media (max-width:900px){.products{grid-template-columns:repeat(3,1fr)}}
+    @media (max-width:680px){.products{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:460px){.products{grid-template-columns:1fr}}
 
-/* botón WhatsApp flotante */
-.whatsapp{position:fixed;bottom:20px;right:20px;background:var(--verde);color:#fff;padding:14px 20px;border-radius:50px;font-weight:bold;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+    .product-card{background:var(--card);border-radius:10px;box-shadow:var(--sombra);text-align:center;padding:12px}
+    .product-card img{width:120px;height:120px;object-fit:contain;margin-bottom:8px}
+    .product-card h3{margin:8px 0 4px;font-size:16px}
+    .product-card .price{margin:0;color:var(--verde);font-weight:700;font-size:16px}
+    .product-card select,.product-card button{width:90%;padding:10px;margin-top:10px;border:none;border-radius:6px}
+    .product-card button{background:var(--vino);color:#fff;cursor:pointer}
+    .product-card button:hover{background:var(--vino-2)}
 
-/* responsive */
-@media(max-width:768px){.producto{max-width:45%}}
-@media(max-width:600px){.producto{width:90%}}
-@media(max-width:480px){
-  header h1{font-size:1.2em}
-  .producto{max-width:100%}
-  .productos{gap:14px;padding-bottom:90px}
-  .btn-agregar{padding:14px 0;font-size:16px}
-}
-</style>
+    .whatsapp-btn{
+      position:fixed;right:20px;bottom:20px;background:#25D366;color:#fff;padding:12px 20px;border-radius:50px;
+      font-weight:700;text-decoration:none;box-shadow:var(--sombra);z-index:9
+    }
+  </style>
 </head>
 <body>
+  <!-- NAV -->
+  <div class="navbar">
+    <div class="menu-icon" onclick="toggleMenu()">☰</div>
+    <img src="https://a8df956abb.cbaul-cdnwnd.com/f87890b711a8506804ac4dab45807d6c/200000000-0f1d8101b8/700/servin%20logo.jpg?ph=a8df956abb" alt="Servin logo">
+    <h1>Chiles y Cereales Servín</h1>
+    <button onclick="window.location.href='cart.html'">Ver Carrito</button>
+  </div>
 
-<header>
-  <button class="menu-toggle" onclick="menu.style.display=menu.style.display==='block'?'none':'block'">☰</button>
-  <img src="https://a8df956abb.cbaul-cdnwnd.com/f87890b711a8506804ac4dab45807d6c/200000000-0f1d8101b8/700/servin%20logo.jpg?ph=a8df956abb" class="logo" onclick="location='index.html'" alt="logo">
-  <h1>Chiles y Cereales Servín</h1>
-  <button class="btn-carrito" onclick="toggleCart()">Carrito (<span id="cartCount">0</span>)</button>
-  <nav id="menu" class="menu">
+  <div class="dropdown-menu" id="dropdownMenu">
     <a href="index.html">Haz tu pedido!</a>
     <a href="about.html">Sobre Nosotros</a>
     <a href="about.html#comentarios">Comentarios</a>
-  </nav>
-</header>
+  </div>
 
-<div class="buscador">
-  <input id="search" placeholder="Buscar producto..." oninput="filter()">
-</div>
-<div id="catBtns" class="categorias"></div>
-<div id="productos" class="productos"><p>Cargando…</p></div>
+  <!-- Buscador -->
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Buscar producto..." oninput="searchProducts()">
+  </div>
 
-<!-- Carrito -->
-<div id="carrito">
-  <h3>Carrito</h3>
-  <div id="cartItems"></div>
-  <div class="total">Total: $<span id="cartTotal">0.00</span></div>
-  <button onclick="sendWhatsApp()" style="margin-top:10px;width:100%">Enviar pedido</button>
-</div>
+  <!-- Descuento -->
+  <div class="discount-container">
+    <p><strong>¿Tienes un código de descuento?</strong></p>
+    <input type="text" id="discountInput" placeholder="Escribe aquí el código (ESPECIAL)" oninput="checkDiscount()">
+  </div>
 
-<a class="whatsapp" href="https://wa.me/524611267217" target="_blank">WhatsApp</a>
+  <!-- Categorías + Productos -->
+  <div class="categories"></div>
+  <div class="products"><p style="grid-column:1/-1;text-align:center">Cargando productos…</p></div>
 
-<script>
-/* ---------- CONFIG ---------- */
-const SHEET_ID = '1V3idgBFfpsIJdBs3Z6B8FmXOc9e6rGtF45Y_heR96B0'; // tu ID de Google Sheet
-// Columnas: A nombre, B categoría, C precio/kg, D imagen, E precio costal,
-// F por kg, G por costal, H peso costal, I por pz, J precio pz,
-// K por caja, L precio caja, M por cubeta, N precio cubeta.
-const QUERY   = 'select A,B,C,D,E,F,G,H,I,J,K,L,M,N';
-/* -------------------------------- */
+  <a href="https://wa.me/524611267217" target="_blank" class="whatsapp-btn">WhatsApp</a>
 
-const $ = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
-const norm = s => (s||'').toString().toLowerCase()
-  .normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+  <script>
+    /* =================== UTILIDADES =================== */
+    const SHEET_ID = '1V3idgBFfpsIJdBs3Z6B8FmXOc9e6rGtF45Y_heR96B0';
+    // A..O (O=precio especial)
+    const QUERY = 'select A,B,C,D,E,F,G,H,I,J,K,L,M,N,O';
 
-const cart    = () => JSON.parse(localStorage.getItem('cart')||'[]');
-const save    = c  => localStorage.setItem('cart',JSON.stringify(c));
-const updateBadge = () => $('#cartCount').textContent = cart().length;
+    const $ = s => document.querySelector(s);
+    const $$ = s => document.querySelectorAll(s);
 
-/* Cargar productos */
-fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq=${encodeURIComponent(QUERY)}`)
-  .then(r=>r.text()).then(t=>{
-    const data = JSON.parse(t.substr(47).slice(0,-2));
-    if(!data.table || !data.table.rows){
-      $('#productos').innerHTML = '<p>Error cargando productos</p>';
-      return;
+    const isTrue = v => v === true || v === 'TRUE' || v === 'true';
+    const isDiscountActive = () => localStorage.getItem('descuentoActivo') === 'true';
+
+    let productosGlobales = [];
+
+    function toggleMenu(){
+      const m = $('#dropdownMenu');
+      m.style.display = (m.style.display === 'block') ? 'none' : 'block';
     }
-    render(data.table.rows);
-  }).catch(()=>{
-    $('#productos').innerHTML = '<p>Error cargando productos</p>';
-  });
 
-function render(rows){
-  const cats = new Set(['todas']);
-  const cont = $('#productos'); cont.innerHTML = '';
-
-  rows.forEach(r=>{ if(r.c[1]) cats.add(r.c[1].v.trim()); });
-
-  /* Botones de categoría */
-  const cb = $('#catBtns'); cb.innerHTML = '';
-  cats.forEach(cat=>{
-    const b = document.createElement('button');
-    b.textContent = cat==='todas' ? 'Ver todos' : cat;
-    b.onclick = ()=>{ currCat=norm(cat); setActive(b); filter(); };
-    if(cat==='todas'){ b.classList.add('active'); currCat='todas'; }
-    cb.appendChild(b);
-  });
-
-  /* Tarjetas de producto */
-  rows.forEach(r=>{
-    const [n,cat,p,img,pc,kgTf,costTf,peso,cantPz,pz,cajaTf,cajaP,cubTf,cubP] = r.c.map(c=>c?.v||'');
-    const div = document.createElement('div'); div.className='producto';
-    div.dataset.cat  = norm(cat);
-    div.dataset.name = norm(n);
-
-    // Precios por unidad
-    div.dataset.pk  = p || 0;       // precio por kg
-    div.dataset.pc  = pc || 0;      // precio costal
-    div.dataset.peso = peso || 0;   // kg del costal
-    div.dataset.pp  = pz || 0;      // precio pieza
-    // Si no tienes L (precio por caja) en tu hoja, iguala pcj a pc:
-    div.dataset.pcj = (cajaP!==''?cajaP:pc) || 0;
-    div.dataset.pcb = cubP || 0;    // precio cubeta
-
-    // Select dinámico
-    const isTrue = v => v===true || v==='TRUE' || v==='true';
-    let opts = '<select onchange="calcPrecio(this)">';
-    let tieneAlgo = false;
-
-    if(isTrue(kgTf)){
-      opts += `
-        <option value="250">250 g</option>
-        <option value="500">500 g</option>
-        <option value="750">750 g</option>
-        <option value="1000" selected>1 kg</option>`;
-      tieneAlgo = true;
+    function searchProducts(){
+      const term = ($('#searchInput').value || '').toLowerCase();
+      $$('.product-card').forEach(card=>{
+        const name = card.querySelector('h3').textContent.toLowerCase();
+        card.style.display = name.includes(term) ? '' : 'none';
+      });
     }
-    if(isTrue(costTf)){ opts += `<option value="costal">Costal (${div.dataset.peso} kg)</option>`; tieneAlgo = true; }
-    if(isTrue(cantPz)){ opts += `<option value="pieza">Pieza</option>`; tieneAlgo = true; }
-    if(isTrue(cajaTf)){ opts += `<option value="caja">Caja</option>`; tieneAlgo = true; }
-    if(isTrue(cubTf)){  opts += `<option value="cubeta">Cubeta</option>`; tieneAlgo = true; }
-    if(!tieneAlgo){     opts += `<option value="unica" selected>Unidad única</option>`; }
 
-    opts += '</select>';
+    function checkDiscount(){
+      const code = ($('#discountInput').value || '').trim().toUpperCase();
+      localStorage.setItem('descuentoActivo', code === 'ESPECIAL' ? 'true' : 'false');
+      renderProducts(productosGlobales);
+    }
 
-    div.innerHTML = `
-      <img src="${img||'https://via.placeholder.com/320x220?text=Sin+imagen'}" alt="${n}">
-      <h3>${n}</h3>
-      <p class="precio">$${(+p||0).toFixed(2)}/kg</p>
-      ${opts}
-      <button class="btn-agregar" onclick="addToCart(this)">Agregar</button>
-    `;
-    cont.appendChild(div);
-  });
+    /* =================== RENDER =================== */
+    function renderProducts(products){
+      const cont = $('.products');
+      cont.innerHTML = '';
+      if(!products || !products.length){
+        cont.innerHTML = '<p style="grid-column:1/-1;text-align:center">Sin productos.</p>';
+        return;
+      }
 
-  filter();
-}
+      // ordenar por nombre
+      const list = [...products].sort((a,b)=>a.name.localeCompare(b.name));
+      const frag = document.createDocumentFragment();
+      const descuento = isDiscountActive();
 
-/* Filtro */
-let currCat = 'todas';
-function setActive(btn){
-  $$('.categorias button').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-}
-function filter(){
-  const term = norm($('#search').value);
-  $$('.producto').forEach(p=>{
-    const okCat = (currCat==='todas'||p.dataset.cat===currCat);
-    const okTxt = (term==='' || p.dataset.name.includes(term));
-    p.style.display = (okCat && okTxt) ? 'block' : 'none';
-  });
-}
+      list.forEach(prod=>{
+        // elegir precios (si hay especial y descuento activo, usarlo como precio unitario para cualquier opción)
+        const pKg    = descuento && prod.precioEspecial > 0 ? prod.precioEspecial : prod.precioKg;
+        const pCost  = descuento && prod.precioEspecial > 0 ? prod.precioEspecial : prod.precioCostalCaja;
+        const pPz    = descuento && prod.precioEspecial > 0 ? prod.precioEspecial : prod.precioPz;
+        const pCaja  = descuento && prod.precioEspecial > 0 ? prod.precioEspecial : prod.precioCaja;
+        const pCub   = descuento && prod.precioEspecial > 0 ? prod.precioEspecial : prod.precioCubeta;
 
-/* Cálculo de precio por unidad seleccionada */
-function calcPrecio(sel){
-  const p = sel.closest('.producto');
-  const v = sel.value;
-  const pk = +p.dataset.pk, pc = +p.dataset.pc, pp = +p.dataset.pp,
-        pcj = +p.dataset.pcj, pcb = +p.dataset.pcb;
-  let precio = pk;  // por defecto 1 kg
+        // opciones
+        let options = '';
+        let firstPrice = 0;
 
-  if(v==='750'||v==='500'||v==='250')      precio = pk*(+v/1000);
-  else if(v==='costal')                    precio = pc;
-  else if(v==='pieza')                     precio = pp;
-  else if(v==='caja')                      precio = pcj;
-  else if(v==='cubeta')                    precio = pcb;
+        if(isTrue(prod.porKg)){
+          options += `<option value="250g">250 g ($${(pKg*0.25).toFixed(2)})</option>`;
+          options += `<option value="500g">500 g ($${(pKg*0.50).toFixed(2)})</option>`;
+          options += `<option value="750g">750 g ($${(pKg*0.75).toFixed(2)})</option>`;
+          options += `<option value="kg" selected>1 kg ($${Number(pKg).toFixed(2)})</option>`;
+          firstPrice = Number(pKg).toFixed(2);
+        }
+        if(isTrue(prod.porCostal)){
+          const pesoTxt = prod.pesoCostalCaja ? ` (${prod.pesoCostalCaja} kg)` : '';
+          options += `<option value="costal">Costal${pesoTxt} ($${Number(pCost).toFixed(2)})</option>`;
+          if(!firstPrice) firstPrice = Number(pCost).toFixed(2);
+        }
+        if(isTrue(prod.porPz)){
+          options += `<option value="pieza">Pieza ($${Number(pPz).toFixed(2)})</option>`;
+          if(!firstPrice) firstPrice = Number(pPz).toFixed(2);
+        }
+        if(isTrue(prod.porCaja)){
+          const pesoTxt = prod.pesoCostalCaja ? ` (${prod.pesoCostalCaja} kg)` : '';
+          options += `<option value="caja">Caja${pesoTxt} ($${Number(pCaja).toFixed(2)})</option>`;
+          if(!firstPrice) firstPrice = Number(pCaja).toFixed(2);
+        }
+        if(isTrue(prod.porCubeta)){
+          options += `<option value="cubeta">Cubeta ($${Number(pCub).toFixed(2)})</option>`;
+          if(!firstPrice) firstPrice = Number(pCub).toFixed(2);
+        }
 
-  p.querySelector('.precio').textContent = '$'+precio.toFixed(2);
-}
+        if(!options){
+          // fallback: precio único usando kg
+          options = `<option value="kg">Precio único ($${Number(pKg).toFixed(2)})</option>`;
+          firstPrice = Number(pKg).toFixed(2);
+        }
 
-/* Carrito: agregar y acumular */
-function addToCart(btn){
-  const p   = btn.closest('.producto');
-  const sel = p.querySelector('select').value;
-  const precioUnit = +p.querySelector('.precio').textContent.replace(/[^0-9.]/g,'');
-  const nombre     = p.querySelector('h3').textContent;
-  const ct = sel==='costal'?`Costal (${p.dataset.peso} kg)`:
-             sel==='pieza' ? 'Pieza' :
-             sel==='caja'  ? 'Caja'  :
-             sel==='cubeta'? 'Cubeta':
-             sel==='unica' ? 'Unidad': sel+' g';
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.dataset.category = prod.category;
+        card.innerHTML = `
+          <img src="${(prod.image&&prod.image.startsWith('http'))?prod.image:'https://via.placeholder.com/150'}" alt="${prod.name}">
+          <h3>${prod.name}</h3>
+          <p class="price">$${firstPrice}</p>
+          <select onchange='updatePrice(this, ${JSON.stringify(prodToSafe(prod))})'>
+            ${options}
+          </select>
+          <button onclick='addToCart(this, ${JSON.stringify(prodToSafe(prod))})'>Agregar</button>
+        `;
+        frag.appendChild(card);
+      });
 
-  const c   = cart();
-  const idx = c.findIndex(x=> x.nombre===nombre && x.ct===ct);
+      cont.appendChild(frag);
+      searchProducts(); // respeta texto ya escrito
+    }
 
-  if (idx > -1) {
-    c[idx].qty    += 1;
-    c[idx].precio += precioUnit;   // subtotal acumulado
-  } else {
-    c.push({nombre, ct, qty:1, precio: precioUnit});
-  }
-  save(c); updateBadge();
+    // Reducimos el objeto para embebido en atributos
+    function prodToSafe(p){
+      return {
+        name:p.name, image:p.image, category:p.category,
+        precioKg:p.precioKg, precioCostalCaja:p.precioCostalCaja, pesoCostalCaja:p.pesoCostalCaja,
+        precioPz:p.precioPz, precioCaja:p.precioCaja, precioCubeta:p.precioCubeta,
+        porKg:p.porKg, porCostal:p.porCostal, porPz:p.porPz, porCaja:p.porCaja, porCubeta:p.porCubeta,
+        precioEspecial:p.precioEspecial
+      };
+    }
 
-  // Feedback en el botón (sin alert)
-  btn.textContent = '✓ Agregado';
-  btn.disabled = true;
-  setTimeout(()=>{ btn.textContent='Agregar'; btn.disabled=false; }, 900);
-}
+    function currentUnitPrice(prod, value){
+      const disc = isDiscountActive() && Number(prod.precioEspecial) > 0;
+      const baseKg = disc ? Number(prod.precioEspecial) : Number(prod.precioKg);
+      const pCost  = disc ? Number(prod.precioEspecial) : Number(prod.precioCostalCaja);
+      const pPz    = disc ? Number(prod.precioEspecial) : Number(prod.precioPz);
+      const pCaja  = disc ? Number(prod.precioEspecial) : Number(prod.precioCaja);
+      const pCub   = disc ? Number(prod.precioEspecial) : Number(prod.precioCubeta);
 
-/* Carrito UI */
-function toggleCart(){
-  const c = $('#carrito');
-  c.style.display = c.style.display==='block' ? 'none' : 'block';
-  renderCart();
-}
-function renderCart(){
-  const items = cart();
-  const ci = $('#cartItems'); ci.innerHTML='';
-  let total = 0;
+      switch(value){
+        case '250g': return baseKg*0.25;
+        case '500g': return baseKg*0.50;
+        case '750g': return baseKg*0.75;
+        case 'kg':   return baseKg;
+        case 'costal': return pCost;
+        case 'pieza':  return pPz;
+        case 'caja':   return pCaja;
+        case 'cubeta': return pCub;
+        default: return baseKg;
+      }
+    }
 
-  items.forEach((it,i)=>{
-    total += it.precio;
-    ci.insertAdjacentHTML('beforeend',`
-      <div class="carrito-item">
-        <span>${it.nombre} (${it.ct}) <strong>x${it.qty}</strong></span>
-        <span>$${it.precio.toFixed(2)}
-          <button onclick="removeItem(${i})">x</button>
-        </span>
-      </div>
-    `);
-  });
-  $('#cartTotal').textContent = total.toFixed(2);
-}
-function removeItem(i){
-  const c = cart(); if(!c[i]) return;
-  // Resta una unidad
-  const qtyPrev = c[i].qty;
-  c[i].qty -= 1;
-  // Recalcula subtotal proporcionalmente
-  c[i].precio = +(c[i].precio / (qtyPrev) * (c[i].qty)).toFixed(2);
-  if(c[i].qty<=0) c.splice(i,1);
-  save(c); updateBadge(); renderCart();
-}
+    function unitLabel(prod, value){
+      if(value==='kg') return '1 kg';
+      if(value==='250g'||value==='500g'||value==='750g') return value;
+      if(value==='costal') return `Costal${prod.pesoCostalCaja?` (${prod.pesoCostalCaja} kg)`:''}`;
+      if(value==='caja') return `Caja${prod.pesoCostalCaja?` (${prod.pesoCostalCaja} kg)`:''}`;
+      if(value==='pieza') return 'Pieza';
+      if(value==='cubeta') return 'Cubeta';
+      return value;
+    }
 
-/* WhatsApp con cantidades */
-function sendWhatsApp(){
-  const c = cart(); if(!c.length){ alert('Carrito vacío'); return; }
-  let msg = '¡Hola! Quiero hacer un pedido:%0A';
-  c.forEach(it=>{
-    msg += `- ${it.nombre} (${it.ct}) x${it.qty}: $${it.precio.toFixed(2)}%0A`;
-  });
-  const total = c.reduce((sum,it)=>sum+it.precio,0).toFixed(2);
-  msg += `%0ATotal: $${total}`;
-  window.open(`https://wa.me/524611267217?text=${msg}`,'_blank');
-}
+    function updatePrice(select, prod){
+      const n = currentUnitPrice(prod, select.value);
+      select.parentElement.querySelector('.price').textContent = '$' + n.toFixed(2);
+    }
 
-updateBadge();
-</script>
+    /* =================== CARRITO (compatible con cart.html de tus amigos) =================== */
+    function addToCart(btn, prod){
+      const card = btn.closest('.product-card');
+      const option = card.querySelector('select').value;
+      const unitPrice = currentUnitPrice(prod, option);
+      const name = prod.name;
+      const image = (prod.image && prod.image.startsWith('http')) ? prod.image : 'https://via.placeholder.com/150';
+
+      let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+
+      // Consolidar por (name + option)
+      const idx = cart.findIndex(it => it.name===name && it.option===option);
+      if(idx>-1){
+        cart[idx].quantity += 1;
+        // mantenemos price como precio unitario (cart.html suele multiplicar)
+        cart[idx].price = Number(unitPrice);
+      }else{
+        cart.push({ name, image, price:Number(unitPrice), option, quantity:1 });
+      }
+      localStorage.setItem('cart', JSON.stringify(cart));
+
+      // feedback sin alert
+      btn.disabled = true;
+      const old = btn.textContent;
+      btn.textContent = '✓ Agregado';
+      setTimeout(()=>{ btn.disabled=false; btn.textContent = old; }, 900);
+    }
+
+    /* =================== CARGA DE SHEETS =================== */
+    fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq=${encodeURIComponent(QUERY)}`)
+      .then(r=>r.text())
+      .then(t=>{
+        const data = JSON.parse(t.substr(47).slice(0,-2));
+        const rows = data.table?.rows || [];
+
+        const products = rows.map(r=>({
+          name: r.c[0]?.v || '',
+          category: r.c[1]?.v || '',
+          precioKg: Number(r.c[2]?.v || 0),
+          image: r.c[3]?.v || '',
+          precioCostalCaja: Number(r.c[4]?.v || 0),    // E (usada para costal o caja)
+          porKg: isTrue(r.c[5]?.v),
+          porCostal: isTrue(r.c[6]?.v),
+          pesoCostalCaja: Number(r.c[7]?.v || 0),
+          porPz: isTrue(r.c[8]?.v),
+          precioPz: Number(r.c[9]?.v || 0),
+          porCaja: isTrue(r.c[10]?.v),
+          precioCaja: Number(r.c[11]?.v || 0),
+          porCubeta: isTrue(r.c[12]?.v),
+          precioCubeta: Number(r.c[13]?.v || 0),
+          precioEspecial: Number(r.c[14]?.v || 0)      // O (precio especial)
+        }));
+
+        productosGlobales = products;
+        loadCategories(products);
+        // Prefill descuento si ya estaba activo
+        if(isDiscountActive()) $('#discountInput').value = 'ESPECIAL';
+        renderProducts(products);
+      })
+      .catch(err=>{
+        console.error('Error cargando productos', err);
+        $('.products').innerHTML = '<p style="grid-column:1/-1;text-align:center">Error al cargar productos.</p>';
+      });
+
+    function loadCategories(products){
+      const cont = $('.categories');
+      const cats = Array.from(new Set(products.map(p=>p.category).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+      cont.innerHTML = '<button onclick="filterByCategory(\'__all__\')">Ver todos</button>';
+      cats.forEach(c=>{
+        const b = document.createElement('button');
+        b.textContent = c;
+        b.onclick = ()=>filterByCategory(c);
+        cont.appendChild(b);
+      });
+    }
+
+    function filterByCategory(category){
+      $$('.product-card').forEach(card=>{
+        const show = (category==='__all__' || card.dataset.category===category);
+        card.style.display = show ? '' : 'none';
+      });
+      searchProducts(); // respeta filtro de texto
+    }
+  </script>
 </body>
 </html>
