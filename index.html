@@ -164,11 +164,12 @@
           options += `<option value="pieza">Pieza ($${Number(pPz).toFixed(2)})</option>`;
           if(!firstPrice) firstPrice = Number(pPz).toFixed(2);
         }
-        if(isTrue(prod.porCaja)){
-          const pesoTxt = prod.pesoCostalCaja ? ` (${prod.pesoCostalCaja} kg)` : '';
-          options += `<option value="caja">Caja${pesoTxt} ($${Number(pCaja).toFixed(2)})</option>`;
-          if(!firstPrice) firstPrice = Number(pCaja).toFixed(2);
-        }
+        if (isTrue(prod.porCaja)){
+  const sufijo = prod.pesoCostalCaja ? ` (${prod.pesoCostalCaja} ${unidadCaja(prod)})` : '';
+  options += `<option value="caja">Caja${sufijo} ($${Number(pCaja).toFixed(2)})</option>`;
+  if(!firstPrice) firstPrice = Number(pCaja).toFixed(2);
+}
+
         if(isTrue(prod.porCubeta)){
           options += `<option value="cubeta">Cubeta ($${Number(pCub).toFixed(2)})</option>`;
           if(!firstPrice) firstPrice = Number(pCub).toFixed(2);
@@ -209,6 +210,10 @@
         precioEspecial:p.precioEspecial
       };
     }
+// Si el producto se vende por pieza y por caja, la caja mostrará "pz"; de lo contrario "kg"
+function unidadCaja(prod){
+  return isTrue(prod.porPz) ? 'pz' : 'kg';
+}
 
     function currentUnitPrice(prod, value){
       const disc = isDiscountActive() && Number(prod.precioEspecial) > 0;
@@ -235,7 +240,7 @@
       if(value==='kg') return '1 kg';
       if(value==='250g'||value==='500g'||value==='750g') return value;
       if(value==='costal') return `Costal${prod.pesoCostalCaja?` (${prod.pesoCostalCaja} kg)`:''}`;
-      if(value==='caja') return `Caja${prod.pesoCostalCaja?` (${prod.pesoCostalCaja} kg)`:''}`;
+      if(value==='caja') return `Caja${prod.pesoCostalCaja ? ` (${prod.pesoCostalCaja} ${unidadCaja(prod)})` : ''}`;
       if(value==='pieza') return 'Pieza';
       if(value==='cubeta') return 'Cubeta';
       return value;
