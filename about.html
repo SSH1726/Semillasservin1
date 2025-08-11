@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sobre nosotros – Chiles y Cereales Servín</title>
+<link rel="icon" href="https://a8df956abb.cbaul-cdnwnd.com/f87890b711a8506804ac4dab45807d6c/200000000-0f1d8101b8/700/servin%20logo.jpg?ph=a8df956abb">
+<style>
+:root{
+  --vino:#800000;
+  --crema:#fff5e1;
+  --crema2:#e6d5c1;
+  --texto:#2b2b2b;
+  --verde:#25d366;
+  --naranja:#ff9800;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;color:var(--texto);background:#f7f7fb;padding-top:70px}
+
+/* header */
+header{position:fixed;top:0;left:0;width:100%;z-index:1000;background:var(--vino);color:#fff;display:flex;align-items:center;padding:10px 14px;gap:14px}
+.menu-toggle{font-size:26px;background:none;border:none;color:#fff;cursor:pointer}
+.logo{height:48px;cursor:pointer}
+header h1{flex:1;text-align:center;font-size:1.5em;white-space:nowrap}
+.btn-principal{background:var(--naranja);color:#fff;border:none;padding:8px 12px;border-radius:5px;font-weight:bold;cursor:pointer;white-space:nowrap}
+.menu{display:none;position:absolute;top:100%;left:0;background:#fff;width:220px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.menu a{display:block;padding:10px 12px;font-weight:bold;color:var(--vino);text-decoration:none;border-bottom:1px solid #eee}
+.menu a:hover{background:#f7f7f7}
+
+/* layout */
+.container{max-width:1100px;margin:20px auto;padding:0 16px}
+.section{background:#fff;border:1px solid #eee;border-radius:12px;padding:18px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.section h2{margin-bottom:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+
+.contacto p{margin:6px 0}
+.badge{display:inline-block;background:var(--crema);border:1px solid #e7e7e7;padding:4px 10px;border-radius:999px;margin-right:6px}
+
+/* rating */
+.rating{display:flex;gap:6px;font-size:28px;cursor:pointer;margin:6px 0 10px}
+.rating .star{color:#ccc}
+.rating .star.active{color:#f5a623}
+
+/* form */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row .full{grid-column:1/-1}
+input,textarea,button{font:inherit}
+input,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px}
+textarea{min-height:110px;resize:vertical}
+button[type="submit"]{background:var(--vino);color:#fff;border:none;padding:12px 16px;border-radius:8px;font-weight:bold;cursor:pointer}
+.small{font-size:.92em;color:#666;margin-top:6px}
+
+.map-wrap iframe{width:100%;height:320px;border:0;border-radius:12px}
+
+/* WhatsApp flotante */
+.whatsapp{position:fixed;bottom:20px;right:20px;background:var(--verde);color:#fff;padding:14px 20px;border-radius:50px;font-weight:bold;text-decoration:none;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="menu-toggle" onclick="menu.style.display=menu.style.display==='block'?'none':'block'">☰</button>
+  <img class="logo" src="https://a8df956abb.cbaul-cdnwnd.com/f87890b711a8506804ac4dab45807d6c/200000000-0f1d8101b8/700/servin%20logo.jpg?ph=a8df956abb" alt="logo" onclick="location='index.html'">
+  <h1>Chiles y Cereales Servín</h1>
+  <button class="btn-principal" onclick="location='index.html'">Haz tu pedido</button>
+  <nav id="menu" class="menu">
+    <a href="index.html">Haz tu pedido</a>
+    <a href="about.html">Sobre nosotros</a>
+    <a href="#comentarios">Comentarios</a>
+  </nav>
+</header>
+
+<main class="container">
+  <!-- SOBRE NOSOTROS -->
+  <section class="section">
+    <h2>Sobre nosotros</h2>
+    <p>En <strong>Chiles y Cereales Servín</strong> llevamos orgullosamente nuestra tradición ofreciendo chiles, semillas, cereales y botanas con la mejor calidad y precios justos. Atendemos por kilo, costal, caja o cubeta, y preparamos tu pedido para entrega o recolección.</p>
+    <div class="contacto" style="margin-top:10px">
+      <span class="badge">Calidad</span>
+      <span class="badge">Precio de mayoreo</span>
+      <span class="badge">Atención personalizada</span>
+      <div style="margin-top:12px">
+        <p><strong>Teléfono/WhatsApp:</strong> +52 461 126 7217</p>
+        <p><strong>Correo:</strong> ventas@servin.com (ejemplo)</p>
+        <p><strong>Horario:</strong> Lun–Sáb 9:00–18:00</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAPA -->
+  <section class="section map-wrap">
+    <h2>¿Dónde estamos?</h2>
+    <!-- Sugerencia: reemplaza el q= por tu dirección exacta -->
+    <iframe
+      src="https://www.google.com/maps?q=Chiles%20y%20Cereales%20Serv%C3%ADn&output=embed"
+      loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+    <p class="small">Si no te ubica con precisión, compárteme tu dirección exacta y te pongo el mapa con marcador fijo.</p>
+  </section>
+
+  <!-- COMENTARIOS -->
+  <section id="comentarios" class="section">
+    <h2>Comentarios, quejas y sugerencias</h2>
+    <p>Tu opinión nos ayuda a mejorar. Déjanos tu calificación y comentario.</p>
+
+    <!-- Rating -->
+    <div class="rating" id="rating">
+      <span class="star" data-val="1">★</span>
+      <span class="star" data-val="2">★</span>
+      <span class="star" data-val="3">★</span>
+      <span class="star" data-val="4">★</span>
+      <span class="star" data-val="5">★</span>
+    </div>
+
+    <!-- Formulario -->
+    <form id="feedbackForm" onsubmit="return enviarFeedback(event)">
+      <div class="form-row">
+        <div><label>Nombre<br><input type="text" id="nombre" placeholder="Tu nombre" required></label></div>
+        <div><label>Teléfono<br><input type="tel" id="telefono" placeholder="+52 …"></label></div>
+        <div class="full"><label>Email<br><input type="email" id="email" placeholder="tucorreo@dominio.com"></label></div>
+        <div class="full"><label>Comentario / Queja / Sugerencia<br>
+          <textarea id="comentario" placeholder="Escríbenos…" required></textarea></label>
+        </div>
+      </div>
+      <input type="hidden" id="ratingValue" value="0">
+      <button type="submit">Enviar</button>
+      <div id="msg" class="small"></div>
+    </form>
+  </section>
+</main>
+
+<a class="whatsapp" href="https://wa.me/524611267217" target="_blank">WhatsApp</a>
+
+<script>
+// --- MAPA MENÚ ---
+const menu = document.getElementById('menu');
+
+// --- RATING ---
+const rating = document.getElementById('rating');
+const ratingInput = document.getElementById('ratingValue');
+rating.addEventListener('click', (e)=>{
+  const star = e.target.closest('.star');
+  if(!star) return;
+  const val = +star.dataset.val;
+  ratingInput.value = val;
+  document.querySelectorAll('.rating .star').forEach(s=>{
+    s.classList.toggle('active', +s.dataset.val <= val);
+  });
+});
+
+// --- ENVIAR A GOOGLE APPS SCRIPT ---
+const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwiBNV3bDt7WXu-munaAuoi_iczWVZntaVqCA0XsWRE71XCY6qTOd-zZ08zXoAtVCLC4Q/exec';
+
+async function enviarFeedback(ev){
+  ev.preventDefault();
+  const nombre    = document.getElementById('nombre').value.trim();
+  const telefono  = document.getElementById('telefono').value.trim();
+  const email     = document.getElementById('email').value.trim();
+  const comentario= document.getElementById('comentario').value.trim();
+  const rating    = +document.getElementById('ratingValue').value || 0;
+  const msgEl     = document.getElementById('msg');
+
+  if(!comentario || !nombre){
+    msgEl.textContent = 'Por favor, completa nombre y comentario.';
+    return false;
+  }
+
+  const payload = {
+    // Enviamos llaves en español e inglés para ser compatibles con tu Apps Script
+    nombre, telefono, email, rating, comentario,
+    name:nombre, phone:telefono, comment:comentario,
+    pagina:'about.html', fecha: new Date().toISOString()
+  };
+
+  try{
+    await fetch(APP_SCRIPT_URL, {
+      method:'POST',
+      mode:'no-cors',                 // evita bloqueos CORS en sitios estáticos
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    msgEl.textContent = '¡Gracias! Tu comentario fue enviado.';
+    (document.getElementById('feedbackForm')).reset();
+    document.querySelectorAll('.rating .star').forEach(s=>s.classList.remove('active'));
+    ratingInput.value = 0;
+  }catch(err){
+    console.error(err);
+    msgEl.textContent = 'No pudimos enviar tu comentario. Intenta de nuevo.';
+  }
+  return false;
+}
+</script>
+</body>
+</html>
