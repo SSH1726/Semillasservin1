@@ -55,6 +55,28 @@
       position:fixed;right:20px;bottom:20px;background:#25D366;color:#fff;padding:12px 20px;border-radius:50px;
       font-weight:700;text-decoration:none;box-shadow:var(--sombra);z-index:9
     }
+    /* --- descuento bloqueado / botones --- */
+.hidden { display:none; }
+.lock-btn{
+  background:#800000;color:#fff;border:none;border-radius:6px;
+  padding:10px 14px;cursor:pointer;font-weight:600
+}
+.apply-btn{
+  background:#0b7a34;color:#fff;border:none;border-radius:6px;
+  padding:10px 14px;cursor:pointer;font-weight:600
+}
+.clear-btn{
+  background:#b73f3f;color:#fff;border:none;border-radius:6px;
+  padding:10px 12px;cursor:pointer;margin-left:8px
+}
+.discount-row{ display:flex; gap:10px; align-items:center; justify-content:center; }
+.discount-row input{
+  padding:10px;width:60%;max-width:360px;font-size:16px;border:1px solid #800000;border-radius:6px
+}
+.badge-ok{
+  background:#e9f7ee;color:#0b7a34;border:1px solid #0b7a34;
+  padding:4px 8px;border-radius:6px;font-size:12px;margin-left:8px
+}
   </style>
 </head>
 <body>
@@ -78,10 +100,15 @@
   </div>
 
   <!-- Descuento -->
-  <div class="discount-container">
-    <p><strong>¿Tienes un código de descuento?</strong></p>
-    <input type="text" id="discountInput" placeholder="Escribe aquí el código (ESPECIAL)" oninput="checkDiscount()">
-  </div>
+  <div class="discount-container" id="discountContainer">
+  <p><strong>¿Tienes un código de descuento?</strong></p>
+
+  <!-- Botón para desbloquear el campo de cupón -->
+  <button class="lock-btn" id="btnDesbloquear" onclick="solicitarAcceso()">Desbloquear campo</button>
+
+  <!-- Área del cupón (oculta hasta que se desbloquea) -->
+  <div id="discountArea" class="hidden" style
+
 
   <!-- Categorías + Productos -->
   <div class="categories"></div>
