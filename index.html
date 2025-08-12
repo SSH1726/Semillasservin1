@@ -203,7 +203,16 @@
 
       // construir options
       let opts = '';
-      if(prod.porKg){ opts += `<option value="kg">1 kg ($${pKg})</option>`; firstPrice = pKg; }
+      if (prod.porKg) {
+  const p = Number(pKg) || 0; // pKg ya trae precio especial si aplica
+  opts += `
+    <option value="250g">250 g ($${(p * 0.25).toFixed(2)})</option>
+    <option value="500g">500 g ($${(p * 0.50).toFixed(2)})</option>
+    <option value="750g">750 g ($${(p * 0.75).toFixed(2)})</option>
+    <option value="kg" selected>1 kg ($${p.toFixed(2)})</option>
+  `;
+  firstPrice = p;
+}
       if(prod.porCostal){ 
         const kg = prod.pesoCostalCaja||prod.pesoCostal||0;
         opts += `<option value="costal">Costal (${kg} kg) ($${pCostal})</option>`;
@@ -240,12 +249,22 @@
     const baseCaja = (prod.precioCaja && prod.precioCaja>0)?prod.precioCaja:(prod.precioCostalCaja||0);
     let val = 0;
     switch(select.value){
+        case '250g':
+  val = (usarEspecial ? prod.precioEspecial : prod.precioKg) * 0.25;
+  break;
+case '500g':
+  val = (usarEspecial ? prod.precioEspecial : prod.precioKg) * 0.50;
+  break;
+case '750g':
+  val = (usarEspecial ? prod.precioEspecial : prod.precioKg) * 0.75;
+  break;
       case 'kg':     val = usarEspecial?prod.precioEspecial:prod.precioKg; break;
       case 'costal': val = usarEspecial?prod.precioEspecial:(prod.precioCostalCaja||0); break;
       case 'pieza':  val = usarEspecial?prod.precioEspecial:(prod.precioPz||0); break;
       case 'caja':   val = usarEspecial?prod.precioEspecial:baseCaja; break;
       case 'cubeta': val = usarEspecial?prod.precioEspecial:(prod.precioCubeta||0); break;
       default:       val = usarEspecial?prod.precioEspecial:prod.precioKg;
+        
     }
     priceEl.textContent = '$'+Number(val||0).toFixed(2);
   }
