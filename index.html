@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Chiles y Cereales Servín</title>
 <style>
+  
   :root{
     --vino:#800000;
     --crema:#f9f1f1;
@@ -60,22 +61,51 @@
     position:fixed;right:20px;bottom:20px;background:#25D366;color:#fff;padding:12px 20px;border-radius:50px;
     font-weight:bold;text-decoration:none;box-shadow:var(--sombra);z-index:9
   }
+  /* Texto corto del botón (oculto por defecto) */
+.cart-btn .btn-short{display:none}
+
+/* Limpieza de header en móvil */
+@media (max-width: 600px){
+  .navbar{padding:8px 12px; gap:8px}
+  .navbar img{display:none;}                  /* ocultar logo SOLO en móvil */
+  .menu-icon{font-size:24px}
+  .navbar h1{
+    font-size:16px;                           /* título más chico */
+    line-height:1.15;
+    margin:0;
+    text-align:left;                          /* evita amontonamiento */
+    flex:1;
+  }
+  .cart-btn{padding:6px 10px; font-size:14px}
+  .cart-btn .btn-long{display:none;}          /* esconder “Ver Carrito” */
+  .cart-btn .btn-short{display:inline;}       /* mostrar “Carrito” */
+}
+
+/* Extra compacto para pantallas muy angostas */
+@media (max-width: 380px){
+  .navbar h1{font-size:14px}
+  .cart-btn{padding:6px 8px; font-size:13px}
+}
+
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <div class="navbar">
   <div class="menu-icon" onclick="toggleMenu()">☰</div>
-  <img src="https://a8df956abb.cbaul-cdnwnd.com/f87890b711a8506804ac4dab45807d6c/200000000-0f1d8101b8/700/servin%20logo.jpg?ph=a8df956abb" alt="Servin">
-  <h1>Chiles y Cereales Servín</h1>
-  <button onclick="location.href='cart.html'">Ver Carrito</button>
+
+  <!-- el logo se mantiene en el DOM pero lo ocultaremos SOLO en móvil -->
+  <img src="https://a8df956abb.cbaul-cdnwnd.com/f87890b711a8506804ac4dab45807d6c/200000000-0f1d8101b8/700/servin%20logo.jpg?ph=a8df956abb" alt="Servin logo">
+
+  <h1>Chiles, Semillas y Cereales Servín</h1>
+
+  <button class="cart-btn" onclick="location.href='cart.html'">
+  <span class="btn-long">Ver Carrito</span>
+  <span class="btn-short">Carrito</span>
+</button>
+
 </div>
-<div id="dropdownMenu" class="dropdown-menu">
-  <a href="index.html">Haz tu pedido!</a>
-  <a href="about.html">Sobre Nosotros</a>
-  <a href="about.html#comentarios">Comentarios</a>
-</div>
+
 
 <!-- Buscador -->
 <div class="search-wrap">
