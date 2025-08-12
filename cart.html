@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Carrito - Chiles y Cereales Servín</title>
+<style>
+  :root{
+    --vino:#800000; --crema:#f9f1f1; --verde:#189a2c; --gris:#666; --sombra:0 2px 10px rgba(0,0,0,.12);
+  }
+  *{box-sizing:border-box}
+  body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#fff}
+  /* NAV */
+  .navbar{background:var(--vino);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 16px;position:sticky;top:0;z-index:10}
+  .navbar img{height:42px}
+  .navbar h1{margin:0;font-size:18px;flex:1;text-align:center}
+  .navbar button{background:orange;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+  /* Contenedor */
+  .wrap{max-width:980px;margin:22px auto;padding:0 14px}
+  .card{background:#fff;border-radius:12px;box-shadow:var(--sombra);padding:14px}
+  .title{margin:0 0 10px 0;font-size:20px}
+  /* Lista carrito */
+  .cart-empty{padding:26px;text-align:center;color:var(--gris)}
+  .row{display:grid;grid-template-columns:64px 1fr auto auto auto;align-items:center;gap:12px;border-bottom:1px solid #eee;padding:10px 0}
+  .row:last-child{border-bottom:none}
+  .thumb{width:64px;height:64px;object-fit:contain}
+  .name{font-weight:700}
+  .muted{color:var(--gris);font-size:13px;margin-top:3px}
+  .qty{display:flex;align-items:center;gap:6px}
+  .qty button{width:28px;height:28px;border:none;background:#eee;border-radius:6px;cursor:pointer}
+  .qty input{width:44px;text-align:center;border:1px solid #ddd;border-radius:6px;padding:6px}
+  .money{font-weight:700;color:#137a2a;min-width:90px;text-align:right}
+  .remove{background:#e24b4b;color:#fff;border:none;border-radius:6px;padding:6px 10px;cursor:pointer}
+  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:12px;flex-wrap:wrap}
+  .total{font-size:18px;font-weight:700}
+  .clear{background:#b73f3f;color:#fff;border:none;border-radius:6px;padding:8px 12px;cursor:pointer}
+  /* Datos cliente */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .grid input,.grid3 input, .grid textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px}
+  .grid textarea{min-height:80px;resize:vertical}
+  .cta{background:var(--vino);color:#fff;border:none;border-radius:8px;padding:12px 16px;font-weight:700;cursor:pointer;width:100%}
+  .badge{display:inline-block;background:#e9f7ee;color:#0b7a34;border:1px solid #0b7a34;border-radius:6px;padding:4px 8px;font-size:12px;margin-left:8px}
+  @media(max-width:680px){
+    .row{grid-template-columns:64px 1fr auto;grid-template-areas:
+      "img name name"
+      "img qty  money"
+      "img rem  money";
+    }
+    .row .thumb{grid-area:img}
+  }
+</style>
+</head>
+<body>
+  <!-- NAV -->
+  <div class="navbar">
+    <img src="https://a8df956abb.cbaul-cdnwnd.com/f87890b711a8506804ac4dab45807d6c/200000000-0f1d8101b8/700/servin%20logo.jpg?ph=a8df956abb" alt="Servin">
+    <h1>Carrito</h1>
+    <button onclick="location.href='index.html'">Volver a la tienda</button>
+  </div>
+
+  <div class="wrap">
+    <!-- Carrito -->
+    <div class="card" id="cartCard">
+      <h2 class="title">Tus productos
+        <span id="specialBadge" class="badge" style="display:none">Precio especial activo</span>
+      </h2>
+      <div id="cartList"></div>
+      <div class="footer" id="cartFooter" style="display:none">
+        <button class="clear" onclick="clearCart()">Vaciar carrito</button>
+        <div class="total">Total: $<span id="cartTotal">0.00</span></div>
+      </div>
+    </div>
+
+    <!-- Datos cliente -->
+    <div class="card" style="margin-top:16px">
+      <h2 class="title">Datos para tu pedido</h2>
+      <div class="grid3" style="margin-bottom:10px">
+        <input id="custName" placeholder="Tu nombre" />
+        <input id="pickupDate" type="date" />
+        <input id="pickupTime" type="time" />
+      </div>
+      <div class="grid" style="margin-bottom:10px">
+        <textarea id="notes" placeholder="Notas (opcional)"></textarea>
+      </div>
+      <button class="cta" onclick="checkout()">Confirmar por WhatsApp</button>
+    </div>
+  </div>
+
+<script>
+  // ===== helpers de carrito =====
+  const $ = s => document.querySelector(s);
+  const tel = '524611267217';
+
+  const getCart = () => JSON.parse(localStorage.getItem('cart')||'[]');
+  const setCart = (c) => localStorage.setItem('cart', JSON.stringify(c));
+
+  // Render
+  function renderCart(){
+    const list = $('#cartList');
+    const footer = $('#cartFooter');
+    const badge = $('#specialBadge');
+    const c = getCart();
+
+    // Mostrar badge si el código ESPECIAL está activo
+    const desc = localStorage.getItem('descuentoActivo')==='true';
+    badge.style.display = desc ? 'inline-block' : 'none';
+
+    if(!c.length){
+      list.innerHTML = '<div class="cart-empty">Tu carrito está vacío.</div>';
+      footer.style.display='none';
+      $('#cartTotal').textContent='0.00';
+      return;
+    }
+
+    list.innerHTML = '';
+    let total = 0;
+
+    c.forEach((it, i) => {
+      // Asegurar estructura: si solo tenemos subtotal, obtener unitario
+      const qty = Number(it.qty||1);
+      const unit = it.unitPrice ? Number(it.unitPrice)
+                   : (qty>0 ? Number(it.price||0)/qty : 0);
+      const sub = unit * qty;
+      total += sub;
+
+      // Normalizar al guardar de vuelta (para que desde aquí quede con unitPrice)
+      it.unitPrice = Number(unit.toFixed(2));
+      it.price = Number(sub.toFixed(2)); // mantenemos compatibilidad con “price = subtotal”
+      setCart(c);
+
+      const row = document.createElement('div');
+      row.className='row';
+      row.innerHTML = `
+        <img class="thumb" src="${it.image||'https://via.placeholder.com/64'}" alt="">
+        <div>
+          <div class="name">${it.name||'Producto'}</div>
+          <div class="muted">Opción: ${it.option||'-'} · $${it.unitPrice.toFixed(2)} c/u</div>
+        </div>
+        <div class="qty">
+          <button onclick="chgQty(${i},-1)">−</button>
+          <input value="${qty}" readonly>
+          <button onclick="chgQty(${i},1)">+</button>
+        </div>
+        <div class="money">$${sub.toFixed(2)}</div>
+        <button class="remove" onclick="removeItem(${i})">Eliminar</button>
+      `;
+      list.appendChild(row);
+    });
+
+    $('#cartTotal').textContent = total.toFixed(2);
+    footer.style.display='flex';
+  }
+
+  function chgQty(i, delta){
+    const c = getCart();
+    if(!c[i]) return;
+    const qty = Math.max(0, Number(c[i].qty||1)+delta);
+    const unit = c[i].unitPrice ? Number(c[i].unitPrice)
+                : (Number(c[i].price||0)/Number(c[i].qty||1)||0);
+
+    if(qty===0){ c.splice(i,1); }
+    else{
+      c[i].qty = qty;
+      c[i].price = Number((unit*qty).toFixed(2)); // mantenemos price como subtotal
+      c[i].unitPrice = Number(unit.toFixed(2));
+    }
+    setCart(c);
+    renderCart();
+  }
+
+  function removeItem(i){
+    const c = getCart();
+    if(!c[i]) return;
+    c.splice(i,1);
+    setCart(c);
+    renderCart();
+  }
+
+  function clearCart(){
+    if(!confirm('¿Vaciar todo el carrito?')) return;
+    setCart([]);
+    renderCart();
+  }
+
+  // Checkout → WhatsApp
+  function checkout(){
+    const c = getCart();
+    if(!c.length){ alert('Tu carrito está vacío.'); return; }
+
+    const name = ($('#custName').value||'').trim();
+    const fecha = $('#pickupDate').value || '';
+    const hora  = $('#pickupTime').value || '';
+    const notas = ($('#notes').value||'').trim();
+
+    if(!name){ alert('Escribe tu nombre.'); return; }
+    if(!fecha){ alert('Selecciona el día de recogida.'); return; }
+    if(!hora){ alert('Selecciona la hora de recogida.'); return; }
+
+    let msg = `Hola, soy ${encodeURIComponent(name)}.%0AQuiero hacer un pedido:%0A%0A`;
+    c.forEach(it=>{
+      const qty = Number(it.qty||1);
+      const unit = it.unitPrice ? Number(it.unitPrice)
+                  : (Number(it.price||0)/Number(it.qty||1)||0);
+      const sub = unit*qty;
+      msg += `• ${encodeURIComponent(it.name)} (${encodeURIComponent(it.option||'-')}) x${qty}: $${sub.toFixed(2)}%0A`;
+    });
+    const total = c.reduce((s,it)=>{
+      const qty = Number(it.qty||1);
+      const unit = it.unitPrice ? Number(it.unitPrice)
+                  : (Number(it.price||0)/Number(it.qty||1)||0);
+      return s + unit*qty;
+    },0);
+    msg += `%0ATotal: $${total.toFixed(2)}%0A`;
+    msg += `%0ARetiro: ${encodeURIComponent(fecha)} a las ${encodeURIComponent(hora)}`;
+    if(notas) msg += `%0ANotas: ${encodeURIComponent(notas)}`;
+
+    // Abrir WhatsApp
+    window.open(`https://wa.me/${tel}?text=${msg}`,'_blank');
+  }
+
+  // Init
+  renderCart();
+</script>
+</body>
+</html>
