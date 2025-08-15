@@ -205,73 +205,92 @@
     });
   }
 
-  // ====== Render productos
   function renderProducts(list){
-    const cont = document.getElementById('prodWrap');
-    cont.innerHTML = '';
-    const sorted = [...list].sort((a,b)=>a.name.localeCompare(b.name));
+  const cont = document.getElementById('prodWrap');
+  cont.innerHTML = '';
+  const sorted = [...list].sort((a,b)=>a.name.localeCompare(b.name));
+  const desc = descuentoActivo === true; // precio especial activo
 
-    sorted.forEach(prod=>{
-      // decidir etiquetas caja kg/pz
-      const cajaEnPiezas = prod.porCaja && prod.porPz;
-      const etiquetaCaja = cajaEnPiezas
-        ? `Caja (${prod.pesoCostalCaja||prod.pesoCostal||prod.pesoCaja||0} pz)`
-        : `Caja (${prod.pesoCostalCaja||prod.pesoCostal||prod.pesoCaja||0} kg)`;
+  sorted.forEach(prod=>{
+    // ¿Caja se expresa en piezas?
+    const cajaEnPiezas = prod.porCaja && prod.porPz;
+    const etiquetaCaja = cajaEnPiezas
+      ? `Caja (${prod.pesoCostalCaja||prod.pesoCostal||prod.pesoCaja||0} pz)`
+      : `Caja (${prod.pesoCostalCaja||prod.pesoCostal||prod.pesoCaja||0} kg)`;
 
-      // elegir primer precio a mostrar
-      let firstPrice = 0;
-      const usarEspecial = descuentoActivo && prod.precioEspecial>0;
+    // REGLA DE DESCUENTO:
+    // - Kg y Pieza pueden usar precio especial
+    // - Costal, Caja, Cubeta SIEMPRE precio normal
+    const priceKg      = desc && prod.precioEspecial>0 ? prod.precioEspecial : (prod.precioKg||0);
+    const pricePieza   = desc && prod.precioEspecial>0 ? prod.precioEspecial : (prod.precioPz||0);
+    const priceCostal  = (prod.precioCostalCaja||0); // sin descuento
+    const baseCaja     = (prod.precioCaja && prod.precioCaja>0) ? prod.precioCaja : (prod.precioCostalCaja||0); // sin descuento
+    const priceCubeta  = (prod.precioCubeta||0); // sin descuento
 
-      // helpers precios (con especial si aplica)
-      const pKg     = usarEspecial ? prod.precioEspecial : prod.precioKg;
-      const pCostal = usarEspecial ? prod.precioEspecial : (prod.precioCostalCaja||0);
-      const pPz     = usarEspecial ? prod.precioEspecial : (prod.precioPz||0);
-      // Para caja: si hay precio en L úsalo; si no, cae a E
-      const baseCaja = (prod.precioCaja && prod.precioCaja>0) ? prod.precioCaja : (prod.precioCostalCaja||0);
-      const pCaja   = usarEspecial ? prod.precioEspecial : baseCaja;
-      const pCubeta = usarEspecial ? prod.precioEspecial : (prod.precioCubeta||0);
+    let firstPrice = 0;
+    let opts = '';
 
-      // construir options
-      let opts = '';
-      if (prod.porKg) {
-  const p = Number(pKg) || 0; // pKg ya trae precio especial si aplica
-  opts += `
-    <option value="250g">250 g ($${(p * 0.25).toFixed(2)})</option>
-    <option value="500g">500 g ($${(p * 0.50).toFixed(2)})</option>
-    <option value="750g">750 g ($${(p * 0.75).toFixed(2)})</option>
-    <option value="kg" selected>1 kg ($${p.toFixed(2)})</option>
-  `;
-  firstPrice = p;
+    // KG + fracciones si aplica
+    if (prod.porKg){
+      opts += `<option value="kg">1 kg ($${Number(priceKg).toFixed(2)})</option>`;
+      opts += `<option value="250">250 g ($${Number(priceKg*0.25).toFixed(2)})</option>`;
+      opts += `<option value="500">500 g ($${Number(priceKg*0.50).toFixed(2)})</option>`;
+      opts += `<option value="750">750 g ($${Number(priceKg*0.75).toFixed(2)})</option>`;
+      firstPrice = priceKg;
+    }
+
+    // Costal
+    if (prod.porCostal){
+      const kg = prod.pesoCostalCaja||prod.pesoCostal||0;
+      opts += `<option value="costal">Costal (${kg} kg) ($${Number(priceCostal).toFixed(2)})</option>`;
+      if (!firstPrice) firstPrice = priceCostal;
+    }
+
+    // Pieza
+    if (prod.porPz){
+      opts += `<option value="pieza">Pieza ($${Number(pricePieza).toFixed(2)})</option>`;
+      if (!firstPrice) firstPrice = pricePieza;
+    }
+
+    // Caja
+    if (prod.porCaja){
+      opts += `<option value="caja">${etiquetaCaja} ($${Number(baseCaja).toFixed(2)})</option>`;
+      if (!firstPrice) firstPrice = baseCaja;
+    }
+
+    // Cubeta
+    if (prod.porCubeta){
+      opts += `<option value="cubeta">Cubeta ($${Number(priceCubeta).toFixed(2)})</option>`;
+      if (!firstPrice) firstPrice = priceCubeta;
+    }
+
+    // Fallback por si no hubo ninguna opción
+    if (!opts){
+      opts = `<option value="unico">Precio único ($${Number(priceKg).toFixed(2)})</option>`;
+      firstPrice = priceKg;
+    }
+
+    const img = prod.image && prod.image.startsWith('http') ? prod.image : 'https://via.placeholder.com/150';
+
+    const card = document.createElement('div');
+    card.className='product-card';
+    card.dataset.category = prod.category||'';
+    card.innerHTML = `
+      <img src="${img}" alt="${prod.name}">
+      <h3>${prod.name}</h3>
+      <p class="price">$${Number(firstPrice).toFixed(2)}</p>
+      <select>${opts}</select>
+      <button>Agregar</button>
+    `;
+    card.querySelector('select').addEventListener('change', e=>updatePrice(e.target, prod));
+    card.querySelector('button').addEventListener('click', ()=>addToCart(card, prod));
+    cont.appendChild(card);
+  });
+
+  // Mantener el filtro de búsqueda activo
+  searchProducts();
 }
-      if(prod.porCostal){ 
-        const kg = prod.pesoCostalCaja||prod.pesoCostal||0;
-        opts += `<option value="costal">Costal (${kg} kg) ($${pCostal})</option>`;
-        if(!firstPrice) firstPrice=pCostal;
-      }
-      if(prod.porPz){ opts += `<option value="pieza">Pieza ($${pPz})</option>`; if(!firstPrice) firstPrice=pPz; }
-      if(prod.porCaja){ opts += `<option value="caja">${etiquetaCaja} ($${pCaja})</option>`; if(!firstPrice) firstPrice=pCaja; }
-      if(prod.porCubeta){ opts += `<option value="cubeta">Cubeta ($${pCubeta})</option>`; if(!firstPrice) firstPrice=pCubeta; }
-      if(!opts){ opts = `<option value="unico">Precio único ($${pKg})</option>`; firstPrice=pKg; }
 
-      const img = prod.image && prod.image.startsWith('http') ? prod.image : 'https://via.placeholder.com/150';
-
-      const card = document.createElement('div');
-      card.className='product-card';
-      card.dataset.category = prod.category||'';
-      card.innerHTML = `
-        <img src="${img}" alt="${prod.name}">
-        <h3>${prod.name}</h3>
-        <p class="price">$${Number(firstPrice).toFixed(2)}</p>
-        <select>${opts}</select>
-        <button>Agregar</button>
-      `;
-      // listeners
-      card.querySelector('select').addEventListener('change', e=>updatePrice(e.target, prod));
-      card.querySelector('button').addEventListener('click', ()=>addToCart(card, prod));
-      cont.appendChild(card);
-    });
-    searchProducts(); // respeta el buscador activo
-  }
 
   function updatePrice(select, prod){
     const usarEspecial = descuentoActivo && prod.precioEspecial>0;
