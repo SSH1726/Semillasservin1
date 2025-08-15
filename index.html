@@ -292,31 +292,35 @@
 }
 
 
-  function updatePrice(select, prod){
-    const usarEspecial = descuentoActivo && prod.precioEspecial>0;
-    const priceEl = select.closest('.product-card').querySelector('.price');
-    const baseCaja = (prod.precioCaja && prod.precioCaja>0)?prod.precioCaja:(prod.precioCostalCaja||0);
-    let val = 0;
-    switch(select.value){
-        case '250g':
-  val = (usarEspecial ? prod.precioEspecial : prod.precioKg) * 0.25;
-  break;
-case '500g':
-  val = (usarEspecial ? prod.precioEspecial : prod.precioKg) * 0.50;
-  break;
-case '750g':
-  val = (usarEspecial ? prod.precioEspecial : prod.precioKg) * 0.75;
-  break;
-      case 'kg':     val = usarEspecial?prod.precioEspecial:prod.precioKg; break;
-      case 'costal': val = usarEspecial?prod.precioEspecial:(prod.precioCostalCaja||0); break;
-      case 'pieza':  val = usarEspecial?prod.precioEspecial:(prod.precioPz||0); break;
-      case 'caja':   val = usarEspecial?prod.precioEspecial:baseCaja; break;
-      case 'cubeta': val = usarEspecial?prod.precioEspecial:(prod.precioCubeta||0); break;
-      default:       val = usarEspecial?prod.precioEspecial:prod.precioKg;
-        
-    }
-    priceEl.textContent = '$'+Number(val||0).toFixed(2);
+ function updatePrice(select, prod){
+  const desc = descuentoActivo === true;
+  const priceEl = select.closest('.product-card').querySelector('.price');
+
+  // Kg y Pieza pueden usar especial; Costal/Caja/Cubeta NO
+  const priceKg     = desc && prod.precioEspecial>0 ? prod.precioEspecial : (prod.precioKg||0);
+  const pricePieza  = desc && prod.precioEspecial>0 ? prod.precioEspecial : (prod.precioPz||0);
+  const priceCostal = (prod.precioCostalCaja||0);
+  const baseCaja    = (prod.precioCaja && prod.precioCaja>0) ? prod.precioCaja : (prod.precioCostalCaja||0);
+  const priceCubeta = (prod.precioCubeta||0);
+
+  let val = 0;
+  switch (select.value){
+    case 'kg':     val = priceKg; break;
+    case '250':    val = priceKg * 0.25; break;
+    case '500':    val = priceKg * 0.50; break;
+    case '750':    val = priceKg * 0.75; break;
+
+    case 'pieza':  val = pricePieza; break;
+
+    case 'costal': val = priceCostal; break;              // sin descuento
+    case 'caja':   val = baseCaja; break;                 // sin descuento
+    case 'cubeta': val = priceCubeta; break;              // sin descuento
+
+    default:       val = priceKg;
   }
+  priceEl.textContent = '$' + Number(val||0).toFixed(2);
+}
+
 
   function addToCart(card, prod){
     const name = prod.name;
