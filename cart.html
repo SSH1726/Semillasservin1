@@ -83,15 +83,22 @@
       <div class="grid" style="margin-bottom:10px">
         <textarea id="notes" placeholder="Notas (opcional)"></textarea>
       </div>
-      <button class="cta" onclick="checkout()">Confirmar por WhatsApp</button>
+
+      <!-- Mensajes -->
+      <p id="orderMsg" style="display:none;margin:6px 0 12px;color:#0b7a34"></p>
+
+      <button class="cta" id="sendBtn" onclick="placeOrder()">Guardar y enviar por WhatsApp</button>
     </div>
   </div>
 
 <script>
-  // ===== helpers de carrito =====
-  const $ = s => document.querySelector(s);
+  /* ====== CONFIG ====== */
+  // Pega aquí la URL /exec de tu WebApp de Apps Script:
+  const ORDERS_ENDPOINT = 'https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycby-w7a06tXGnEF_6FGhAI-Z05o6TchQ8GP7kkUHPGihPu11D8t-3PcIX_lFhJkwyqb2Fg/exec';
   const tel = '524611267217';
 
+  /* ===== helpers de carrito ===== */
+  const $ = s => document.querySelector(s);
   const getCart = () => JSON.parse(localStorage.getItem('cart')||'[]');
   const setCart = (c) => localStorage.setItem('cart', JSON.stringify(c));
 
@@ -183,12 +190,34 @@
     renderCart();
   }
 
-  // Checkout → WhatsApp
-  function checkout(){
+  /* ===== WhatsApp helper ===== */
+  function buildWhatsappMessage({name, fecha, hora, notas, cart}){
+    let msg = `Hola, soy ${encodeURIComponent(name)}.%0AQuiero hacer un pedido:%0A%0A`;
+    cart.forEach(it=>{
+      const qty  = Number(it.qty||1);
+      const unit = it.unitPrice ? Number(it.unitPrice)
+                 : (Number(it.price||0)/Number(it.qty||1)||0);
+      const sub  = unit*qty;
+      msg += `• ${encodeURIComponent(it.name)} (${encodeURIComponent(it.option||'-')}) x${qty}: $${sub.toFixed(2)}%0A`;
+    });
+    const total = cart.reduce((s,it)=>{
+      const qty  = Number(it.qty||1);
+      const unit = it.unitPrice ? Number(it.unitPrice)
+                 : (Number(it.price||0)/Number(it.qty||1)||0);
+      return s + unit*qty;
+    },0);
+    msg += `%0ATotal: $${total.toFixed(2)}%0A`;
+    msg += `%0ARetiro: ${encodeURIComponent(fecha)} a las ${encodeURIComponent(hora)}`;
+    if(notas) msg += `%0ANotas: ${encodeURIComponent(notas)}`;
+    return msg;
+  }
+
+  /* ===== Enviar al Sheets + WhatsApp ===== */
+  async function placeOrder(){
     const c = getCart();
     if(!c.length){ alert('Tu carrito está vacío.'); return; }
 
-    const name = ($('#custName').value||'').trim();
+    const name  = ($('#custName').value||'').trim();
     const fecha = $('#pickupDate').value || '';
     const hora  = $('#pickupTime').value || '';
     const notas = ($('#notes').value||'').trim();
@@ -197,26 +226,67 @@
     if(!fecha){ alert('Selecciona el día de recogida.'); return; }
     if(!hora){ alert('Selecciona la hora de recogida.'); return; }
 
-    let msg = `Hola, soy ${encodeURIComponent(name)}.%0AQuiero hacer un pedido:%0A%0A`;
-    c.forEach(it=>{
-      const qty = Number(it.qty||1);
+    // Preparar items para API
+    const items = c.map(it=>{
+      const qty  = Number(it.qty||1);
       const unit = it.unitPrice ? Number(it.unitPrice)
-                  : (Number(it.price||0)/Number(it.qty||1)||0);
-      const sub = unit*qty;
-      msg += `• ${encodeURIComponent(it.name)} (${encodeURIComponent(it.option||'-')}) x${qty}: $${sub.toFixed(2)}%0A`;
+                 : (qty>0 ? Number(it.price||0)/qty : 0);
+      const line = unit*qty;
+      return {
+        name: it.name,
+        option: it.option || '',
+        qty,
+        unit: +unit.toFixed(2),
+        lineTotal: +line.toFixed(2)
+      };
     });
-    const total = c.reduce((s,it)=>{
-      const qty = Number(it.qty||1);
-      const unit = it.unitPrice ? Number(it.unitPrice)
-                  : (Number(it.price||0)/Number(it.qty||1)||0);
-      return s + unit*qty;
-    },0);
-    msg += `%0ATotal: $${total.toFixed(2)}%0A`;
-    msg += `%0ARetiro: ${encodeURIComponent(fecha)} a las ${encodeURIComponent(hora)}`;
-    if(notas) msg += `%0ANotas: ${encodeURIComponent(notas)}`;
+    const total = items.reduce((s,i)=>s+i.lineTotal,0);
 
-    // Abrir WhatsApp
-    window.open(`https://wa.me/${tel}?text=${msg}`,'_blank');
+    const payload = {
+      nombre: name,
+      fecha,
+      hora,
+      total: +total.toFixed(2),
+      items
+    };
+
+    const btn = $('#sendBtn');
+    const msgEl = $('#orderMsg');
+
+    try{
+      btn.disabled = true;
+      btn.textContent = 'Enviando…';
+      msgEl.style.display = 'none';
+      msgEl.textContent = '';
+
+      // Enviar a Apps Script (JSON)
+      const res = await fetch(ORDERS_ENDPOINT, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if(!data.ok){
+        throw new Error(data.error || 'Error desconocido del servidor');
+      }
+
+      // Éxito: mostrar folio, abrir WhatsApp, limpiar carrito
+      const folio = data.id || '';
+      msgEl.style.display = 'block';
+      msgEl.textContent = 'Pedido registrado. Folio: ' + folio;
+
+      const waMsg = buildWhatsappMessage({name, fecha, hora, notas, cart:c});
+      window.open(`https://wa.me/${tel}?text=${waMsg}`,'_blank');
+
+      localStorage.removeItem('cart');
+      renderCart();
+    }catch(err){
+      alert('No se pudo registrar el pedido: ' + err.message);
+    }finally{
+      btn.disabled = false;
+      btn.textContent = 'Guardar y enviar por WhatsApp';
+    }
   }
 
   // Init
