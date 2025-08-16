@@ -118,9 +118,7 @@ async function registerOrder(payload){
     return null;
   }
 }
-</script>
-
-
+  
   /* ===== helpers de carrito ===== */
   const $ = s => document.querySelector(s);
   const getCart = () => JSON.parse(localStorage.getItem('cart')||'[]');
@@ -182,7 +180,7 @@ async function registerOrder(payload){
     $('#cartTotal').textContent = total.toFixed(2);
     footer.style.display='flex';
   }
-<script>
+
 
 
   function chgQty(i, delta){
@@ -239,7 +237,6 @@ async function registerOrder(payload){
   }
 
   /* ===== Enviar al Sheets + WhatsApp ===== */
-  <script>
 async function placeOrder(){
   const c = getCart();
   if (!c.length){ alert('Tu carrito está vacío.'); return; }
