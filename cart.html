@@ -91,40 +91,40 @@
     </div>
   </div>
 
+<!-- ============== CONFIG ============== -->
 <script>
-/* ====== CONFIG ====== */
-// Pega aquí la URL /exec de tu WebApp de Apps Script (una sola, SIN repetir "https://.../s/")
-const ORDERS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwz--72VjjDOr7fNPMG7huDeyTWFXbmKIi-tzb5Lzg2DlGoYNxN2EWPGIeEff0RDHWM5A/exec';
-const tel = '524611267217';
+  // Pega aquí la URL /exec de tu WebApp de Apps Script
+  const ORDERS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwz--72VjjDOr7fNPMG7huDeyTWFXbmKIi-tzb5Lzg2DlGoYNxN2EWPGIeEff0RDHWM5A/exec';
+  const tel = '524611267217';
 </script>
+
+<!-- ============== LÓGICA PRINCIPAL ============== -->
 <script>
-async function registerOrder(payload){
-  try{
-    const res = await fetch(ORDERS_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // sin preflight CORS
-      body: JSON.stringify(payload)
-    });
-
-    // Si el servidor permite CORS leeremos el JSON; si no, igual se envió
-    let data = null;
-    try { data = await res.json(); } catch (_) {}
-    if (data && data.ok === false) throw new Error(data.error || 'Error servidor');
-
-    return data?.id || null;
-  } catch (err) {
-    console.warn('Registro en Sheets falló:', err);
-    // No frenamos el flujo del usuario
-    return null;
-  }
-}
-  
-  /* ===== helpers de carrito ===== */
+  // ===== helpers de carrito =====
   const $ = s => document.querySelector(s);
   const getCart = () => JSON.parse(localStorage.getItem('cart')||'[]');
   const setCart = (c) => localStorage.setItem('cart', JSON.stringify(c));
 
-  // Render
+  // ====== API fallback (no bloquea flujo) ======
+  async function registerOrder(payload){
+    try{
+      // Enviamos como text/plain para evitar preflight CORS
+      const res = await fetch(ORDERS_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      let data = null;
+      try { data = await res.json(); } catch(_) {}
+      if (data && data.ok === false) throw new Error(data.error || 'Error servidor');
+      return data?.id || null;
+    } catch (err) {
+      console.warn('Registro en Sheets falló:', err);
+      return null;
+    }
+  }
+
+  // ====== Render ======
   function renderCart(){
     const list = $('#cartList');
     const footer = $('#cartFooter');
@@ -146,16 +146,14 @@ async function registerOrder(payload){
     let total = 0;
 
     c.forEach((it, i) => {
-      // Asegurar estructura: si solo tenemos subtotal, obtener unitario
-     const qty  = __getQty(it);
-     const unit = __getUnit(it);
-
-      const sub = unit * qty;
+      const qty  = __getQty(it);
+      const unit = __getUnit(it);
+      const sub  = unit * qty;
       total += sub;
 
-      // Normalizar al guardar de vuelta (para que desde aquí quede con unitPrice)
+      // Normaliza estructura
       it.unitPrice = Number(unit.toFixed(2));
-      it.price = Number(sub.toFixed(2)); // mantenemos compatibilidad con “price = subtotal”
+      it.price     = Number(sub.toFixed(2)); // compat: price = subtotal
       setCart(c);
 
       const row = document.createElement('div');
@@ -181,20 +179,18 @@ async function registerOrder(payload){
     footer.style.display='flex';
   }
 
-
-
   function chgQty(i, delta){
     const c = getCart();
     if(!c[i]) return;
     const qty  = Math.max(0, __getQty(c[i]) + delta);
-const unit = __getUnit(c[i]);
-
+    const unit = __getUnit(c[i]);
 
     if(qty===0){ c.splice(i,1); }
     else{
-      c[i].qty = qty;
-      c[i].price = Number((unit*qty).toFixed(2)); // mantenemos price como subtotal
+      c[i].qty       = qty;                         // también guardamos como qty
+      c[i].quantity  = qty;                         // …y como quantity por compatibilidad
       c[i].unitPrice = Number(unit.toFixed(2));
+      c[i].price     = Number((unit*qty).toFixed(2)); // subtotal
     }
     setCart(c);
     renderCart();
@@ -214,114 +210,105 @@ const unit = __getUnit(c[i]);
     renderCart();
   }
 
-  /* ===== WhatsApp helper ===== */
+  // ===== WhatsApp helper =====
   function buildWhatsappMessage({name, fecha, hora, notas, cart}){
     let msg = `Hola, soy ${encodeURIComponent(name)}.%0AQuiero hacer un pedido:%0A%0A`;
     cart.forEach(it=>{
       const qty  = __getQty(it);
       const unit = __getUnit(it);
-
+      const sub  = unit * qty;
       msg += `• ${encodeURIComponent(it.name)} (${encodeURIComponent(it.option||'-')}) x${qty}: $${sub.toFixed(2)}%0A`;
     });
-    const total = cart.reduce((s,it)=>{
-      const qty  = Number(it.qty||1);
-      const unit = it.unitPrice ? Number(it.unitPrice)
-                 : (Number(it.price||0)/Number(it.qty||1)||0);
-      return s + unit*qty;
-    },0);
+    const total = cart.reduce((s,it)=> s + (__getUnit(it) * __getQty(it)), 0);
     msg += `%0ATotal: $${total.toFixed(2)}%0A`;
     msg += `%0ARetiro: ${encodeURIComponent(fecha)} a las ${encodeURIComponent(hora)}`;
     if(notas) msg += `%0ANotas: ${encodeURIComponent(notas)}`;
     return msg;
   }
 
-  /* ===== Enviar al Sheets + WhatsApp ===== */
-async function placeOrder(){
-  const c = getCart();
-  if (!c.length){ alert('Tu carrito está vacío.'); return; }
+  // ===== Enviar a Sheets + WhatsApp =====
+  async function placeOrder(){
+    const c = getCart();
+    if (!c.length){ alert('Tu carrito está vacío.'); return; }
 
-  const name  = ($('#custName').value||'').trim();
-  const fecha = $('#pickupDate').value || '';
-  const hora  = $('#pickupTime').value || '';
-  const notas = ($('#notes').value||'').trim();
-  if(!name){ alert('Escribe tu nombre.'); return; }
-  if(!fecha){ alert('Selecciona el día de recogida.'); return; }
-  if(!hora){ alert('Selecciona la hora de recogida.'); return; }
+    const name  = ($('#custName').value||'').trim();
+    const fecha = $('#pickupDate').value || '';
+    const hora  = $('#pickupTime').value || '';
+    const notas = ($('#notes').value||'').trim();
+    if(!name){ alert('Escribe tu nombre.'); return; }
+    if(!fecha){ alert('Selecciona el día de recogida.'); return; }
+    if(!hora){ alert('Selecciona la hora de recogida.'); return; }
 
-  // 1) Prepara payload para Apps Script
-  const items = c.map(it=>{
-    const qty  = __getQty(it);
-const unit = __getUnit(it);
-
-    const line = unit*qty;
-    return {
-      name: it.name,
-      option: it.option||'',
-      qty,
-      unit: Number(unit.toFixed(2)),
-      lineTotal: +line.toFixed(2),
-    };
-  });
-  const total = items.reduce((s,i)=>s+i.lineTotal,0);
-  const payload = { nombre:name, fecha, hora, total:+total.toFixed(2), items };
-
-  const btn   = $('#sendBtn');
-  const msgEl = $('#orderMsg');
-  btn.disabled = true;
-  const prevTxt = btn.textContent;
-  btn.textContent = 'Enviando…';
-  msgEl.style.display = 'none';
-  msgEl.textContent = '';
-
-  // 2) Construye mensaje de WhatsApp (por si hay que usar fallback)
-  const waMsg = buildWhatsappMessage({name, fecha, hora, notas, cart:c});
-
-  // 3) Intenta registrar en Apps Script (no bloquea el envío por WhatsApp)
-  let folio = '';
-  try{
-    const fd = new FormData();
-    fd.append('payload', JSON.stringify(payload));
-    const res  = await fetch(ORDERS_ENDPOINT, { method:'POST', body: fd });
-    const data = await res.json(); // si CORS bloquea, esta línea lanzará error
-
-    if (!data.ok) throw new Error(data.error || 'Error servidor');
-    folio = data.id || '';
-    // Éxito → muestra folio
-    msgEl.style.display = 'block';
-    msgEl.textContent = 'Pedido registrado. Folio: ' + folio;
-  }catch(err){
-    // Falla → avisar pero NO bloquear el flujo
-    console.warn('Registro en Sheets falló:', err);
-    msgEl.style.display = 'block';
-    msgEl.textContent = 'No se pudo registrar el pedido, pero se enviará por WhatsApp.';
-  }
-
-  // 4) Abrir WhatsApp SIEMPRE
-  window.open(`https://wa.me/${tel}?text=${waMsg}`,'_blank');
-
-  // 5) Limpiar carrito y recuperar botón
-  setCart([]);
-  renderCart();
-  btn.disabled = false;
-  btn.textContent = prevTxt;
-}
-    <!-- Llama a renderCart al cargar y corrige qty/quantity -->
-  <script>
-    // Reemplaza TODOS los usos de it.qty por esta forma con fallback:
-    //  - Si ya los tienes dentro de tus funciones, no dupliques; deja estos helpers globales.
-    window.__getQty = (it) => Number((it.qty ?? it.quantity) || 1);
-    window.__getUnit = (it) => {
-      const q = window.__getQty(it);
-      if (it.unitPrice != null) return Number(it.unitPrice);
-      const sub = Number(it.price || 0);
-      return q > 0 ? sub / q : 0;
-    };
-
-    // Llamar al render al cargar la página
-    document.addEventListener('DOMContentLoaded', () => {
-      try { renderCart(); } catch (e) { console.error(e); }
+    // Items para la API
+    const items = c.map(it=>{
+      const qty  = __getQty(it);
+      const unit = __getUnit(it);
+      const line = unit*qty;
+      return {
+        name: it.name,
+        option: it.option||'',
+        qty,
+        unit: Number(unit.toFixed(2)),
+        lineTotal: +line.toFixed(2),
+      };
     });
-  
-  </script>
+    const total = items.reduce((s,i)=>s+i.lineTotal,0);
+    const payload = { nombre:name, fecha, hora, total:+total.toFixed(2), items };
+
+    const btn   = $('#sendBtn');
+    const msgEl = $('#orderMsg');
+    const prevTxt = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando…';
+    msgEl.style.display = 'none';
+    msgEl.textContent = '';
+
+    // Mensaje de WhatsApp (fallback)
+    const waMsg = buildWhatsappMessage({name, fecha, hora, notas, cart:c});
+
+    // Registrar (no bloquea el envío)
+    let folio = '';
+    try{
+      const fd = new FormData();
+      fd.append('payload', JSON.stringify(payload));
+      const res  = await fetch(ORDERS_ENDPOINT, { method:'POST', body: fd });
+      const data = await res.json(); // si CORS bloquea, lanzará error
+      if (!data.ok) throw new Error(data.error || 'Error servidor');
+      folio = data.id || '';
+      msgEl.style.display = 'block';
+      msgEl.textContent = 'Pedido registrado. Folio: ' + folio;
+    }catch(err){
+      console.warn('Registro en Sheets falló:', err);
+      msgEl.style.display = 'block';
+      msgEl.textContent = 'No se pudo registrar el pedido, pero se enviará por WhatsApp.';
+    }
+
+    // Abrir WhatsApp SIEMPRE
+    window.open(`https://wa.me/${tel}?text=${waMsg}`,'_blank');
+
+    // Limpiar y restaurar UI
+    setCart([]);
+    renderCart();
+    btn.disabled = false;
+    btn.textContent = prevTxt;
+  }
+</script>
+
+<!-- ============== HELPERS + ARRANQUE ============== -->
+<script>
+  // Acepta qty o quantity; calcula unit price desde subtotal si hace falta
+  window.__getQty = (it) => Number((it.qty ?? it.quantity) || 1);
+  window.__getUnit = (it) => {
+    const q = window.__getQty(it);
+    if (it.unitPrice != null) return Number(it.unitPrice);
+    const sub = Number(it.price || 0);
+    return q > 0 ? sub / q : 0;
+  };
+
+  // Render al cargar
+  document.addEventListener('DOMContentLoaded', () => {
+    try { renderCart(); } catch (e) { console.error(e); }
+  });
+</script>
 </body>
 </html>
