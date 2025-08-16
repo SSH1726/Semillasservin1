@@ -147,9 +147,9 @@ async function registerOrder(payload){
 
     c.forEach((it, i) => {
       // Asegurar estructura: si solo tenemos subtotal, obtener unitario
-      const qty = Number(it.qty||1);
-      const unit = it.unitPrice ? Number(it.unitPrice)
-                   : (qty>0 ? Number(it.price||0)/qty : 0);
+     const qty  = __getQty(it);
+     const unit = __getUnit(it);
+
       const sub = unit * qty;
       total += sub;
 
@@ -186,9 +186,9 @@ async function registerOrder(payload){
   function chgQty(i, delta){
     const c = getCart();
     if(!c[i]) return;
-    const qty = Math.max(0, Number(c[i].qty||1)+delta);
-    const unit = c[i].unitPrice ? Number(c[i].unitPrice)
-                : (Number(c[i].price||0)/Number(c[i].qty||1)||0);
+    const qty  = Math.max(0, __getQty(c[i]) + delta);
+const unit = __getUnit(c[i]);
+
 
     if(qty===0){ c.splice(i,1); }
     else{
@@ -218,10 +218,9 @@ async function registerOrder(payload){
   function buildWhatsappMessage({name, fecha, hora, notas, cart}){
     let msg = `Hola, soy ${encodeURIComponent(name)}.%0AQuiero hacer un pedido:%0A%0A`;
     cart.forEach(it=>{
-      const qty  = Number(it.qty||1);
-      const unit = it.unitPrice ? Number(it.unitPrice)
-                 : (Number(it.price||0)/Number(it.qty||1)||0);
-      const sub  = unit*qty;
+      const qty  = __getQty(it);
+      const unit = __getUnit(it);
+
       msg += `• ${encodeURIComponent(it.name)} (${encodeURIComponent(it.option||'-')}) x${qty}: $${sub.toFixed(2)}%0A`;
     });
     const total = cart.reduce((s,it)=>{
@@ -251,9 +250,9 @@ async function placeOrder(){
 
   // 1) Prepara payload para Apps Script
   const items = c.map(it=>{
-    const qty  = Number(it.qty||1);
-    const unit = it.unitPrice ? Number(it.unitPrice)
-               : (Number(it.price||0)/Number(it.qty||1)||0);
+    const qty  = __getQty(it);
+const unit = __getUnit(it);
+
     const line = unit*qty;
     return {
       name: it.name,
@@ -306,6 +305,23 @@ async function placeOrder(){
   btn.disabled = false;
   btn.textContent = prevTxt;
 }
-</script>
+    <!-- Llama a renderCart al cargar y corrige qty/quantity -->
+  <script>
+    // Reemplaza TODOS los usos de it.qty por esta forma con fallback:
+    //  - Si ya los tienes dentro de tus funciones, no dupliques; deja estos helpers globales.
+    window.__getQty = (it) => Number((it.qty ?? it.quantity) || 1);
+    window.__getUnit = (it) => {
+      const q = window.__getQty(it);
+      if (it.unitPrice != null) return Number(it.unitPrice);
+      const sub = Number(it.price || 0);
+      return q > 0 ? sub / q : 0;
+    };
+
+    // Llamar al render al cargar la página
+    document.addEventListener('DOMContentLoaded', () => {
+      try { renderCart(); } catch (e) { console.error(e); }
+    });
+  
+  </script>
 </body>
 </html>
