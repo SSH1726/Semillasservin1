@@ -92,10 +92,34 @@
   </div>
 
 <script>
-  /* ====== CONFIG ====== */
-  // Pega aquí la URL /exec de tu WebApp de Apps Script:
-  const ORDERS_ENDPOINT = 'https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycby-w7a06tXGnEF_6FGhAI-Z05o6TchQ8GP7kkUHPGihPu11D8t-3PcIX_lFhJkwyqb2Fg/exec';
-  const tel = '524611267217';
+/* ====== CONFIG ====== */
+// Pega aquí la URL /exec de tu WebApp de Apps Script (una sola, SIN repetir "https://.../s/")
+const ORDERS_ENDPOINT = 'https://script.google.com/macros/s/AKfycby-w7a06tXGnEF_6FGhAI-Z05o6TchQ8GP7kkUHPGihPu11D8t-3PcIX_lFhJkwyqb2Fg/exec';
+const tel = '524611267217';
+</script>
+<script>
+async function registerOrder(payload){
+  try{
+    const res = await fetch(ORDERS_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // sin preflight CORS
+      body: JSON.stringify(payload)
+    });
+
+    // Si el servidor permite CORS leeremos el JSON; si no, igual se envió
+    let data = null;
+    try { data = await res.json(); } catch (_) {}
+    if (data && data.ok === false) throw new Error(data.error || 'Error servidor');
+
+    return data?.id || null;
+  } catch (err) {
+    console.warn('Registro en Sheets falló:', err);
+    // No frenamos el flujo del usuario
+    return null;
+  }
+}
+</script>
+
 
   /* ===== helpers de carrito ===== */
   const $ = s => document.querySelector(s);
@@ -158,6 +182,8 @@
     $('#cartTotal').textContent = total.toFixed(2);
     footer.style.display='flex';
   }
+<script>
+
 
   function chgQty(i, delta){
     const c = getCart();
@@ -213,81 +239,77 @@
   }
 
   /* ===== Enviar al Sheets + WhatsApp ===== */
-  async function placeOrder(){
-    const c = getCart();
-    if(!c.length){ alert('Tu carrito está vacío.'); return; }
+  <script>
+async function placeOrder(){
+  const c = getCart();
+  if (!c.length){ alert('Tu carrito está vacío.'); return; }
 
-    const name  = ($('#custName').value||'').trim();
-    const fecha = $('#pickupDate').value || '';
-    const hora  = $('#pickupTime').value || '';
-    const notas = ($('#notes').value||'').trim();
+  const name  = ($('#custName').value||'').trim();
+  const fecha = $('#pickupDate').value || '';
+  const hora  = $('#pickupTime').value || '';
+  const notas = ($('#notes').value||'').trim();
+  if(!name){ alert('Escribe tu nombre.'); return; }
+  if(!fecha){ alert('Selecciona el día de recogida.'); return; }
+  if(!hora){ alert('Selecciona la hora de recogida.'); return; }
 
-    if(!name){ alert('Escribe tu nombre.'); return; }
-    if(!fecha){ alert('Selecciona el día de recogida.'); return; }
-    if(!hora){ alert('Selecciona la hora de recogida.'); return; }
-
-    // Preparar items para API
-    const items = c.map(it=>{
-      const qty  = Number(it.qty||1);
-      const unit = it.unitPrice ? Number(it.unitPrice)
-                 : (qty>0 ? Number(it.price||0)/qty : 0);
-      const line = unit*qty;
-      return {
-        name: it.name,
-        option: it.option || '',
-        qty,
-        unit: +unit.toFixed(2),
-        lineTotal: +line.toFixed(2)
-      };
-    });
-    const total = items.reduce((s,i)=>s+i.lineTotal,0);
-
-    const payload = {
-      nombre: name,
-      fecha,
-      hora,
-      total: +total.toFixed(2),
-      items
+  // 1) Prepara payload para Apps Script
+  const items = c.map(it=>{
+    const qty  = Number(it.qty||1);
+    const unit = it.unitPrice ? Number(it.unitPrice)
+               : (Number(it.price||0)/Number(it.qty||1)||0);
+    const line = unit*qty;
+    return {
+      name: it.name,
+      option: it.option||'',
+      qty,
+      unit: Number(unit.toFixed(2)),
+      lineTotal: +line.toFixed(2),
     };
+  });
+  const total = items.reduce((s,i)=>s+i.lineTotal,0);
+  const payload = { nombre:name, fecha, hora, total:+total.toFixed(2), items };
 
-    const btn = $('#sendBtn');
-    const msgEl = $('#orderMsg');
+  const btn   = $('#sendBtn');
+  const msgEl = $('#orderMsg');
+  btn.disabled = true;
+  const prevTxt = btn.textContent;
+  btn.textContent = 'Enviando…';
+  msgEl.style.display = 'none';
+  msgEl.textContent = '';
 
-    try{
-      btn.disabled = true;
-      btn.textContent = 'Enviando…';
-      msgEl.style.display = 'none';
-      msgEl.textContent = '';
+  // 2) Construye mensaje de WhatsApp (por si hay que usar fallback)
+  const waMsg = buildWhatsappMessage({name, fecha, hora, notas, cart:c});
 
-      // Enviar a Apps Script SIN headers (form-data)
-const fd = new FormData();
-fd.append('payload', JSON.stringify(payload));
+  // 3) Intenta registrar en Apps Script (no bloquea el envío por WhatsApp)
+  let folio = '';
+  try{
+    const fd = new FormData();
+    fd.append('payload', JSON.stringify(payload));
+    const res  = await fetch(ORDERS_ENDPOINT, { method:'POST', body: fd });
+    const data = await res.json(); // si CORS bloquea, esta línea lanzará error
 
-const res  = await fetch(ORDERS_ENDPOINT, { method:'POST', body: fd });
-const data = await res.json();
-
-if (!data.ok) {
-  throw new Error(data.error || 'Error desconocido del servidor');
-}
-
-
-      // Éxito: mostrar folio, abrir WhatsApp, limpiar carrito
-      const folio = data.id || '';
-      msgEl.style.display = 'block';
-      msgEl.textContent = 'Pedido registrado. Folio: ' + folio;
-
-      const waMsg = buildWhatsappMessage({name, fecha, hora, notas, cart:c});
-      window.open(`https://wa.me/${tel}?text=${waMsg}`,'_blank');
-
-      localStorage.removeItem('cart');
-      renderCart();
-    }catch(err){
-      alert('No se pudo registrar el pedido: ' + err.message);
-    }finally{
-      btn.disabled = false;
-      btn.textContent = 'Guardar y enviar por WhatsApp';
-    }
+    if (!data.ok) throw new Error(data.error || 'Error servidor');
+    folio = data.id || '';
+    // Éxito → muestra folio
+    msgEl.style.display = 'block';
+    msgEl.textContent = 'Pedido registrado. Folio: ' + folio;
+  }catch(err){
+    // Falla → avisar pero NO bloquear el flujo
+    console.warn('Registro en Sheets falló:', err);
+    msgEl.style.display = 'block';
+    msgEl.textContent = 'No se pudo registrar el pedido, pero se enviará por WhatsApp.';
   }
+
+  // 4) Abrir WhatsApp SIEMPRE
+  window.open(`https://wa.me/${tel}?text=${waMsg}`,'_blank');
+
+  // 5) Limpiar carrito y recuperar botón
+  setCart([]);
+  renderCart();
+  btn.disabled = false;
+  btn.textContent = prevTxt;
+}
+</script>
 
   // Init
   renderCart();
